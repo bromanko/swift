@@ -81,9 +81,10 @@ class Interpreter {
     }
 }
 
-
-print("calc > ", terminator: "")
-let response = readLine()
-let interpreter = Interpreter(text: response!)
-let result = try interpreter.expr()
-print(result)
+while (true) {
+    print("calc > ", terminator: "")
+    let response = readLine()
+    let interpreter = Interpreter(text: response!)
+    let result = try interpreter.expr()
+    print(result)
+}
