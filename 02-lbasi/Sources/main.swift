@@ -6,11 +6,11 @@ enum TokenType {
     case EOF
 }
 
-class Token: CustomStringConvertible {
+class Token<T>: CustomStringConvertible {
     private let type: TokenType
-    private let value: AnyObject?
+    private let value: T?
 
-    init(type: TokenType, value: AnyObject? = nil) {
+    init(type: TokenType, value: T? = nil) {
         self.type = type
         self.value = value
     }
@@ -21,38 +21,69 @@ class Token: CustomStringConvertible {
 }
 
 enum InterpreterError: ErrorProtocol {
-    case CannotParse
+    case UnknownToken
+    case InvalidSyntax
 }
 
 class Interpreter {
     private let text: String
     private var pos: String.Index
-    private var currentToken: Token? = nil
+    private var currentToken: Token<Any>
 
     init(text: String) {
         self.text = text
         self.pos = self.text.characters.startIndex
+        self.currentToken = Token(type: TokenType.EOF)
     }
 
-    private func getNextToken() throws -> Token {
+    private func getNextToken() throws -> Token<Any> {
         let text = self.text
 
-//        if (self.pos.successor() > text.characters.count - 1) {
-//            return Token(type: TokenType.EOF)
-//        }
+        if (self.pos >= text.endIndex) {
+            return Token(type: TokenType.EOF)
+        }
 
         let currentChar = text[self.pos]
 
-        throw InterpreterError.CannotParse
+        if (Int(String(currentChar)) != nil) {
+            self.pos = self.pos.successor()
+            return Token(type: TokenType.Integer, value: Int(String(currentChar)))
+        }
+
+        if (currentChar == "+") {
+            self.pos = self.pos.successor()
+            return Token(type: TokenType.Plus)
+        }
+
+        throw InterpreterError.UnknownToken
     }
 
-    func expr() -> String {
-        return "hi"
+    private func eat(type: TokenType) throws {
+        if (self.currentToken.type == type) {
+            self.currentToken = try self.getNextToken()
+        } else {
+            throw InterpreterError.InvalidSyntax
+        }
+    }
+
+    func expr() throws -> String {
+        self.currentToken = try self.getNextToken()
+
+        let left = self.currentToken.value as! Int
+        try self.eat(TokenType.Integer)
+
+        try self.eat(TokenType.Plus)
+
+        let right = self.currentToken.value as! Int
+        try self.eat(TokenType.Integer)
+
+        return String(left + right)
     }
 }
 
 
-let response = readLine(strippingNewline: true)
+print("calc > ", terminator: "")
+let response = readLine()
 let interpreter = Interpreter(text: response!)
-let result = interpreter.expr()
+let result = try interpreter.expr()
 print(result)
