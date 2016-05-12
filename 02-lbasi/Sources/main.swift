@@ -7,7 +7,7 @@ enum TokenType {
     case EOF
 }
 
-class Token<T>: CustomStringConvertible {
+struct Token<T>: CustomStringConvertible {
     private let type: TokenType
     private let value: T?
 
@@ -29,35 +29,33 @@ enum InterpreterError: ErrorProtocol {
 class Interpreter {
     private let text: String
     private var pos: String.Index
-    private var currentChar: Character?
     private var currentToken: Token<Any>
+
+    var currentChar: Character { return text[pos] }
+
+    var hasMoreCharacters: Bool { return pos < text.endIndex }
+
 
     init(text: String) {
         self.text = text
         self.pos = self.text.characters.startIndex
-        self.currentChar = self.text[self.pos]
         self.currentToken = Token(type: TokenType.EOF)
     }
 
+
     private func advance() {
         pos = pos.successor()
-
-        if pos >= text.endIndex {
-            currentChar = nil
-        } else {
-            currentChar = text[pos]
-        }
     }
 
     private func skipWhitespace() {
-        while (currentChar != nil && currentChar != Character("")) {
+        while (hasMoreCharacters && currentChar != Character("")) {
             advance()
         }
     }
 
     private func integer() -> Int {
         var result: String = ""
-        while (currentChar != nil && Int(String(currentChar)) != nil) {
+        while (hasMoreCharacters && Int(String(currentChar)) != nil) {
             result += String(currentChar)
             advance()
         }
@@ -65,8 +63,8 @@ class Interpreter {
     }
 
     private func getNextToken() throws -> Token<Any> {
-        while (currentChar != nil) {
-            if currentChar == Character("") {
+        while (hasMoreCharacters) {
+            if String(currentChar) == " " {
                 skipWhitespace()
                 continue
             }
@@ -76,10 +74,12 @@ class Interpreter {
             }
 
             if currentChar == "+" {
+                advance()
                 return Token(type: TokenType.plus)
             }
 
             if currentChar == "-" {
+                advance()
                 return Token(type: TokenType.minus)
             }
 
@@ -90,8 +90,7 @@ class Interpreter {
     }
 
     private func eat(type: TokenType) throws {
-        guard currentToken.type == type else { throw InterpreterError.invalidSyntax
-        }
+        guard currentToken.type == type else { throw InterpreterError.invalidSyntax }
 
         currentToken = try getNextToken()
     }
