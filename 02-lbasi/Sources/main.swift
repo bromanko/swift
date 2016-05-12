@@ -1,9 +1,9 @@
 import Foundation
 
 enum TokenType {
-    case Integer
-    case Plus
-    case Minus
+    case integer
+    case plus
+    case minus
     case EOF
 }
 
@@ -22,8 +22,8 @@ class Token<T>: CustomStringConvertible {
 }
 
 enum InterpreterError: ErrorProtocol {
-    case UnknownToken
-    case InvalidSyntax
+    case unknownToken
+    case invalidSyntax
 }
 
 class Interpreter {
@@ -72,44 +72,43 @@ class Interpreter {
             }
 
             if Int(String(currentChar)) != nil {
-                return Token(type: TokenType.Integer, value: integer())
+                return Token(type: TokenType.integer, value: integer())
             }
 
             if currentChar == "+" {
-                return Token(type: TokenType.Plus)
+                return Token(type: TokenType.plus)
             }
 
             if currentChar == "-" {
-                return Token(type: TokenType.Minus)
+                return Token(type: TokenType.minus)
             }
 
-            throw InterpreterError.UnknownToken
+            throw InterpreterError.unknownToken
         }
 
         return Token(type: TokenType.EOF)
     }
 
     private func eat(type: TokenType) throws {
-        if currentToken.type == type {
-            currentToken = try getNextToken()
-        } else {
-            throw InterpreterError.InvalidSyntax
+        guard currentToken.type == type else { throw InterpreterError.invalidSyntax
         }
+
+        currentToken = try getNextToken()
     }
 
     func expr() throws -> String {
         currentToken = try getNextToken()
 
         let left = currentToken.value as! Int
-        try eat(TokenType.Integer)
+        try eat(TokenType.integer)
 
         let op = currentToken
         try eat(op.type)
 
         let right = currentToken.value as! Int
-        try eat(TokenType.Integer)
+        try eat(TokenType.integer)
 
-        if op.type == TokenType.Plus {
+        if op.type == TokenType.plus {
             return String(left + right)
         } else {
             return String(left - right)
