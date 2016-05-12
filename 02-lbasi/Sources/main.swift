@@ -42,7 +42,7 @@ class Interpreter {
     private func advance() {
         pos = pos.successor()
 
-        if (pos >= text.endIndex) {
+        if pos >= text.endIndex {
             currentChar = nil
         } else {
             currentChar = text[pos]
@@ -66,20 +66,20 @@ class Interpreter {
 
     private func getNextToken() throws -> Token<Any> {
         while (currentChar != nil) {
-            if (currentChar == Character("")) {
+            if currentChar == Character("") {
                 skipWhitespace()
                 continue
             }
 
-            if (Int(String(currentChar)) != nil) {
+            if Int(String(currentChar)) != nil {
                 return Token(type: TokenType.Integer, value: integer())
             }
 
-            if (currentChar == "+") {
+            if currentChar == "+" {
                 return Token(type: TokenType.Plus)
             }
 
-            if (currentChar == "-") {
+            if currentChar == "-" {
                 return Token(type: TokenType.Minus)
             }
 
@@ -90,7 +90,7 @@ class Interpreter {
     }
 
     private func eat(type: TokenType) throws {
-        if (currentToken.type == type) {
+        if currentToken.type == type {
             currentToken = try getNextToken()
         } else {
             throw InterpreterError.InvalidSyntax
@@ -109,7 +109,7 @@ class Interpreter {
         let right = currentToken.value as! Int
         try eat(TokenType.Integer)
 
-        if (op.type == TokenType.Plus) {
+        if op.type == TokenType.Plus {
             return String(left + right)
         } else {
             return String(left - right)
