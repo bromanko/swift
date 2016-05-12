@@ -48,7 +48,7 @@ class Interpreter {
     }
 
     private func skipWhitespace() {
-        while (hasMoreCharacters && currentChar != Character("")) {
+        while (hasMoreCharacters && String(currentChar) == " ") {
             advance()
         }
     }
