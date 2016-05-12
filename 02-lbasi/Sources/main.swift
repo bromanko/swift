@@ -17,7 +17,7 @@ class Token<T>: CustomStringConvertible {
     }
 
     var description: String {
-        return "Token(\(self.type), \(self.value))"
+        return "Token(\(type), \(value))"
     }
 }
 
@@ -40,46 +40,46 @@ class Interpreter {
     }
 
     private func advance() {
-        self.pos = self.pos.successor()
+        pos = pos.successor()
 
-        if (self.pos >= text.endIndex) {
-            self.currentChar = nil
+        if (pos >= text.endIndex) {
+            currentChar = nil
         } else {
-            self.currentChar = text[self.pos]
+            currentChar = text[pos]
         }
     }
 
     private func skipWhitespace() {
-        while (self.currentChar != nil && self.currentChar != Character("")) {
-            self.advance()
+        while (currentChar != nil && currentChar != Character("")) {
+            advance()
         }
     }
 
     private func integer() -> Int {
         var result: String = ""
-        while (self.currentChar != nil && Int(String(currentChar)) != nil) {
-            result += String(self.currentChar)
-            self.advance()
+        while (currentChar != nil && Int(String(currentChar)) != nil) {
+            result += String(currentChar)
+            advance()
         }
         return Int(result)!
     }
 
     private func getNextToken() throws -> Token<Any> {
-        while (self.currentChar != nil) {
-            if (self.currentChar == Character("")) {
-                self.skipWhitespace()
+        while (currentChar != nil) {
+            if (currentChar == Character("")) {
+                skipWhitespace()
                 continue
             }
 
-            if (Int(String(self.currentChar)) != nil) {
-                return Token(type: TokenType.Integer, value: self.integer())
+            if (Int(String(currentChar)) != nil) {
+                return Token(type: TokenType.Integer, value: integer())
             }
 
-            if (self.currentChar == "+") {
+            if (currentChar == "+") {
                 return Token(type: TokenType.Plus)
             }
 
-            if (self.currentChar == "-") {
+            if (currentChar == "-") {
                 return Token(type: TokenType.Minus)
             }
 
@@ -90,24 +90,24 @@ class Interpreter {
     }
 
     private func eat(type: TokenType) throws {
-        if (self.currentToken.type == type) {
-            self.currentToken = try self.getNextToken()
+        if (currentToken.type == type) {
+            currentToken = try getNextToken()
         } else {
             throw InterpreterError.InvalidSyntax
         }
     }
 
     func expr() throws -> String {
-        self.currentToken = try self.getNextToken()
+        currentToken = try getNextToken()
 
-        let left = self.currentToken.value as! Int
-        try self.eat(TokenType.Integer)
+        let left = currentToken.value as! Int
+        try eat(TokenType.Integer)
 
-        let op = self.currentToken
-        try self.eat(op.type)
+        let op = currentToken
+        try eat(op.type)
 
-        let right = self.currentToken.value as! Int
-        try self.eat(TokenType.Integer)
+        let right = currentToken.value as! Int
+        try eat(TokenType.Integer)
 
         if (op.type == TokenType.Plus) {
             return String(left + right)
