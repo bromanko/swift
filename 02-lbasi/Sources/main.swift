@@ -3,6 +3,7 @@ import Foundation
 enum TokenType {
     case Integer
     case Plus
+    case Minus
     case EOF
 }
 
@@ -28,34 +29,64 @@ enum InterpreterError: ErrorProtocol {
 class Interpreter {
     private let text: String
     private var pos: String.Index
+    private var currentChar: Character?
     private var currentToken: Token<Any>
 
     init(text: String) {
         self.text = text
         self.pos = self.text.characters.startIndex
+        self.currentChar = self.text[self.pos]
         self.currentToken = Token(type: TokenType.EOF)
     }
 
-    private func getNextToken() throws -> Token<Any> {
-        let text = self.text
+    private func advance() {
+        self.pos = self.pos.successor()
 
         if (self.pos >= text.endIndex) {
-            return Token(type: TokenType.EOF)
+            self.currentChar = nil
+        } else {
+            self.currentChar = text[self.pos]
+        }
+    }
+
+    private func skipWhitespace() {
+        while (self.currentChar != nil && self.currentChar != Character("")) {
+            self.advance()
+        }
+    }
+
+    private func integer() -> Int {
+        var result: String = ""
+        while (self.currentChar != nil && Int(String(currentChar)) != nil) {
+            result += String(self.currentChar)
+            self.advance()
+        }
+        return Int(result)!
+    }
+
+    private func getNextToken() throws -> Token<Any> {
+        while (self.currentChar != nil) {
+            if (self.currentChar == Character("")) {
+                self.skipWhitespace()
+                continue
+            }
+
+            if (Int(String(self.currentChar)) != nil) {
+                return Token(type: TokenType.Integer, value: self.integer())
+            }
+
+            if (self.currentChar == "+") {
+                return Token(type: TokenType.Plus)
+            }
+
+            if (self.currentChar == "-") {
+                return Token(type: TokenType.Minus)
+            }
+
+            throw InterpreterError.UnknownToken
         }
 
-        let currentChar = text[self.pos]
-
-        if (Int(String(currentChar)) != nil) {
-            self.pos = self.pos.successor()
-            return Token(type: TokenType.Integer, value: Int(String(currentChar)))
-        }
-
-        if (currentChar == "+") {
-            self.pos = self.pos.successor()
-            return Token(type: TokenType.Plus)
-        }
-
-        throw InterpreterError.UnknownToken
+        return Token(type: TokenType.EOF)
     }
 
     private func eat(type: TokenType) throws {
@@ -72,12 +103,17 @@ class Interpreter {
         let left = self.currentToken.value as! Int
         try self.eat(TokenType.Integer)
 
-        try self.eat(TokenType.Plus)
+        let op = self.currentToken
+        try self.eat(op.type)
 
         let right = self.currentToken.value as! Int
         try self.eat(TokenType.Integer)
 
-        return String(left + right)
+        if (op.type == TokenType.Plus) {
+            return String(left + right)
+        } else {
+            return String(left - right)
+        }
     }
 }
 
